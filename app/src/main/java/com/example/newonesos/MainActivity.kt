@@ -5,6 +5,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -23,8 +24,10 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.newonesos.databinding.ActivityMainBinding
 import java.io.FileNotFoundException
+import java.io.PrintStream
 import java.io.Serializable
 import java.util.Scanner
+import java.util.Timer
 
 class MainActivity: ComponentActivity(), CallbackInterface {
     val RECORD_REQUEST_CODE = 101
@@ -37,6 +40,7 @@ class MainActivity: ComponentActivity(), CallbackInterface {
     private var rBound: Boolean = false
     var contactList:ArrayList<Contact> = ArrayList()
     lateinit var adapter: ContactAdapter
+    var sharedPref: SharedPreferences? = null
 
     //service binding
 //    private val uConnection = object : ServiceConnection {
@@ -89,6 +93,8 @@ class MainActivity: ComponentActivity(), CallbackInterface {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        sharedPref = getSharedPreferences("sosText", Context.MODE_PRIVATE);
+
         binding.startButton.setOnClickListener{ startAction() }
         binding.resetButton.setOnClickListener{ resetAction() }
         binding.startButton2.setOnClickListener { startRecurring() }
@@ -97,26 +103,17 @@ class MainActivity: ComponentActivity(), CallbackInterface {
             val intent = Intent(this, ContactListActivity::class.java)
             startActivity(intent)
         }
+        binding.saveButton.setOnClickListener { setSOSMessage() }
         initData()
     }
 
     override fun onStart() {
         super.onStart()
-        // Bind to LocalService.
-//        Intent(this, UpdateService::class.java).also { intent ->
-//            bindService(intent, uConnection, Context.BIND_AUTO_CREATE)
-//            println("uBOUND")
-//        }
-
-        Intent(this, TimerService::class.java).also { intent ->
-            bindService(intent, tConnection, Context.BIND_AUTO_CREATE)
-            println("tBOUND")
-        }
 
         contactList.clear()
         initData()
         initPermissions()
-
+        binding.sosMessageText.setText(sharedPref?.getString("sosText", "default if empty"))
     }
 
     fun refreshList() {
@@ -156,11 +153,16 @@ class MainActivity: ComponentActivity(), CallbackInterface {
         }
     }
 
+
     private fun getInput(textField: EditText): Int {
         val input = textField.text.toString()
         val splitInput = input.split(":")
         for (text in splitInput) {
             println(text)
+        }
+
+        if (splitInput.size < 4 ) {
+            return 0
         }
 
         val days = splitInput[0].toInt() * 24 * 60 * 60 * 1000
@@ -171,12 +173,18 @@ class MainActivity: ComponentActivity(), CallbackInterface {
         return days + hours + minutes + seconds
     }
 
-    fun startStopAction() {
-
-    }
-
     fun startAction() {
+        Intent(this, TimerService::class.java).also { intent ->
+            bindService(intent, tConnection, Context.BIND_AUTO_CREATE)
+            println("tBOUND")
+        }
+
         val time = getInput(binding.timerText).toLong()
+        if (time <= 0) {
+            binding.timerText.setText(R.string.place_holder_time)
+            Toast.makeText(this, "Please Input A Valid Duration DD:HH:MM:SS", Toast.LENGTH_SHORT).show()
+            return
+        }
         val intent = Intent(this, TimerService::class.java)
         intent.putExtra("time", time)
         intent.putExtra("list", contactList)
@@ -184,7 +192,10 @@ class MainActivity: ComponentActivity(), CallbackInterface {
     }
 
     fun resetAction() {
-
+        unbindService(tConnection)
+        val intent = Intent(this, TimerService::class.java)
+        stopService(intent)
+        binding.timerText.setText(R.string.place_holder_time)
     }
 
     override fun updateText(time: Long) {
@@ -217,20 +228,26 @@ class MainActivity: ComponentActivity(), CallbackInterface {
         }
 
         val time = getInput(binding.timerText2).toLong()
+        if (time <= 0) {
+            binding.timerText2.setText(R.string.place_holder_time)
+            Toast.makeText(this, "Please Input A Valid Duration DD:HH:MM:SS", Toast.LENGTH_SHORT).show()
+            return
+        }
         val intent = Intent(this, RecurringService::class.java)
         intent.putExtra("time", time)
         intent.putExtra("list", contactList)
         startService(intent)
     }
 
-    override fun resetRecurr() {
-
-    }
-
     private fun stopRecurring() {
         unbindService(rConnection)
         val intent = Intent(this, RecurringService::class.java)
         stopService(intent)
+    }
+
+    fun setSOSMessage() {
+        val input = binding.sosMessageText.text
+        sharedPref?.edit()?.putString("sosText", input.toString())?.commit()
     }
 
     override fun sendSOS() {
@@ -240,7 +257,7 @@ class MainActivity: ComponentActivity(), CallbackInterface {
 
                 // on below line we are sending text message.
                 for (contact in contactList) {
-                    smsManager.sendTextMessage(contact.number, null, "help", null, null)
+                    smsManager.sendTextMessage(contact.number, null, sharedPref?.getString("sosText", "default if empty"), null, null)
                 }
 
                 // on below line we are displaying a toast message for message send,

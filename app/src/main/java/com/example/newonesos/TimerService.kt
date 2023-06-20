@@ -64,6 +64,11 @@ class TimerService: Service() {
         return binder
     }
 
+    override fun onDestroy() {
+        countdown?.cancel()
+        super.onDestroy()
+    }
+
     override fun onTaskRemoved(rootIntent: Intent) {
         stopService(rootIntent)
     }

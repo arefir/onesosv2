@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">NewOneSOS</string>
+    <string name="app_name">OneSOS</string>
     <string name="place_holder_time">00:00:00:00</string>
     <string name="reset">Reset</string>
     <string name="start">Start</string>

@@ -21,13 +21,13 @@
             android:layout_width="180dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Button" />
+            android:text="ADD" />
 
         <Button
             android:id="@+id/backButton"
             android:layout_width="203dp"
             android:layout_height="wrap_content"
-            android:text="Button" />
+            android:text="Back" />
     </LinearLayout>
 
 </LinearLayout>
