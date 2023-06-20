@@ -7,6 +7,7 @@ import android.os.Build
 import android.os.CountDownTimer
 import android.os.IBinder
 import android.widget.Toast
+import java.io.Serializable
 import java.util.Timer
 import java.util.TimerTask
 
@@ -17,6 +18,7 @@ class TimerService: Service() {
     var countdown: CountDownTimer? = null
     private val binder = LocalBinder()
     private var serviceCallbacks: CallbackInterface? = null
+
 
     inner class LocalBinder : Binder() {
         // Return this instance of MyService so clients can call public methods
@@ -51,7 +53,7 @@ class TimerService: Service() {
         val time = if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
             intent?.getSerializableExtra("time")
         else
-            intent?.getSerializableExtra("contact") as Long
+            intent?.getSerializableExtra("time") as Long
         if (time != null) {
             startCountdown(time as Long)
         }

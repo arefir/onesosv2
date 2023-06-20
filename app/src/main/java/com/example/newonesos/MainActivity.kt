@@ -150,7 +150,7 @@ class MainActivity: ComponentActivity(), CallbackInterface {
         if (permission != PackageManager.PERMISSION_GRANTED) {
             Log.i(tag, "Permission to record denied")
             ActivityCompat.requestPermissions(this,
-                arrayOf(android.Manifest.permission.SEND_SMS),
+                arrayOf(android.Manifest.permission.SEND_SMS, android.Manifest.permission.READ_PHONE_STATE),
                 RECORD_REQUEST_CODE)
 
         }

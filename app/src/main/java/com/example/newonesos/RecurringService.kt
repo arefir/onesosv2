@@ -51,7 +51,7 @@ class RecurringService: Service() {
         val time = if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
             intent?.getSerializableExtra("time")
         else
-            intent?.getSerializableExtra("contact") as Long
+            intent?.getSerializableExtra("time") as Long
         if (time != null) {
             rootIntent = intent
             timeValue = time as Long
